@@ -1,39 +1,27 @@
+// server.js для Vercel
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 
-// Простейший сервер
-const server = http.createServer((req, res) => {
-    console.log(`📥 ${req.method} ${req.url}`);
-    
-    let filePath = req.url === '/' ? 'index.html' : req.url;
-    let fullPath = path.join(__dirname, filePath);
-    
-    fs.readFile(fullPath, (err, content) => {
-        if (err) {
-            res.writeHead(404);
-            res.end('404 - Страница не найдена');
-        } else {
-            res.writeHead(200);
-            res.end(content);
-        }
-    });
-});
+// Функция которая будет вызываться Vercel
+module.exports = (req, res) => {
+  // Если есть index.html - показываем его
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    res.setHeader('Content-Type', 'text/html');
+    res.end(html);
+  } catch (err) {
+    res.statusCode = 200;
+    res.end('<h1>Мой сайт на Vercel!</h1>');
+  }
+};
 
-const PORT = 3000;
-server.listen(PORT, () => {
-    console.log(`
-    ╔══════════════════════════════════════════╗
-    ║           ✅ СЕРВЕР ЗАПУЩЕН!            ║
-    ╚══════════════════════════════════════════╝
-    
-    📍 Локально: http://localhost:${PORT}
-    
-    🚀 Теперь открой ВТОРОЕ окно терминала
-    🚀 И выполни: npx localtunnel --port ${PORT}
-    
-    ═══════════════════════════════════════════
-    🌍 Получишь ссылку для друзей!
-    ═══════════════════════════════════════════
-    `);
-});
+// Для локального запуска
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  const testServer = http.createServer(module.exports);
+  testServer.listen(PORT, () => {
+    console.log(`Локально: http://localhost:${PORT}`);
+  });
+}
